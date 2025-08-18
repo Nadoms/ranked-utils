@@ -2,6 +2,7 @@ from pathlib import Path
 
 
 SEASON = 8
+FIRST_MATCHES = [0, 100876, 338897, 519262, 674676, 909752, 1168208, 1499237, 1970845]
 FINAL_MATCHES = [100875, 338896, 519261, 674675, 909751, 1168207, 1499236, 1970844, 3000000]
 FOOTER_TEXT = "By @nadoms • Send bugs & feedback! • youtube.com/@nqdoms"
 FOOTER_ICON = "https://cdn.discordapp.com/avatars/298936021557706754/a_60fb14a1dbfb0d33f3b02cc33579dacf?size=256"
