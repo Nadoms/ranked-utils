@@ -1,3 +1,6 @@
+from pathlib import Path
+
+
 SEASON = 8
 FINAL_MATCHES = [100875, 338896, 519261, 674675, 909751, 1168207, 1499236, 1970844, 3000000]
 FOOTER_TEXT = "By @nadoms • Send bugs & feedback! • youtube.com/@nqdoms"
@@ -19,3 +22,4 @@ SPLIT_MAP = {SPLIT_CODES_ALL[i]: SPLITS[i] for i in range(len(SPLIT_CODES_ALL))}
 MAJOR_SPLITS = ["OVERWORLD", "NETHER", "POST_BLIND", "END"]
 BASTIONS = ["BRIDGE", "HOUSING", "STABLES", "TREASURE"]
 OVERWORLDS = ["BURIED_TREASURE", "DESERT_TEMPLE", "RUINED_PORTAL", "SHIPWRECK", "VILLAGE"]
+DEFAULT_DB = Path.home() / "databases" / "ranked.db"
