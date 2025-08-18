@@ -1,7 +1,6 @@
 import asyncio
 import json
 from os import getenv
-from pathlib import Path
 from typing import Optional
 import aiohttp
 from dotenv import load_dotenv
