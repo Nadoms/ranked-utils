@@ -23,7 +23,6 @@ def get_splits_naive(match):
                 last_time = event["time"]
                 last_split = constants.SPLIT_MAP[event["type"]]
                 seen_splits.append(event["type"])
-                print(split_times, last_split, seen_splits)
 
         if completion_time is not None and winner is not None:
             split_times["end"] = completion_time - last_time
