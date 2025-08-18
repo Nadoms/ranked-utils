@@ -9,7 +9,7 @@ import requests
 from .db import *
 
 
-load_dotenv()
+load_dotenv(constants.ENV_FILE)
 API_KEY = getenv("API_KEY")
 API_URL = "https://mcsrranked.com/api"
 HEADERS = {
