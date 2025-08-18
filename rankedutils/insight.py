@@ -24,7 +24,7 @@ def get_splits_naive(match):
                 last_split = constants.SPLIT_MAP[event["type"]]
                 seen_splits.append(event["type"])
 
-        if completion_time is not None and winner is not None:
+        if completion_time is not None and winner == uuid:
             split_times["end"] = completion_time - last_time
 
         player_split_times[uuid] = split_times
