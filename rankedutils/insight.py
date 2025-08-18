@@ -1,5 +1,4 @@
-import json
-import constants
+from . import constants
 
 
 def get_splits_naive(match):
