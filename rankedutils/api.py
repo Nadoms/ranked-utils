@@ -343,9 +343,6 @@ class Match(API):
         Match._conn.commit()
         return Match._additions
 
-    def __del__(self):
-        Match.commit()
-
 
 class Versus(API):
 
