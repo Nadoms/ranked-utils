@@ -1,6 +1,6 @@
 from datetime import datetime
 import math
-import numb
+from . import numb
 
 
 def calc_length(word, size):
