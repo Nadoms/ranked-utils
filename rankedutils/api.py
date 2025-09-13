@@ -246,7 +246,12 @@ class VersusMatches(Matches):
 
 class Match(API):
     _additions: int = 0
-    _conn, _cursor = start()
+    _conn = None
+    _cursor = None
+
+    @classmethod
+    def init_db(cls, db_path: Path = constants.DEFAULT_DB):
+        cls._conn, cls._cursor = start(db_path)
 
     def __init__(
         self,
