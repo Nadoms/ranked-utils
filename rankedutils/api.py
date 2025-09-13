@@ -1,5 +1,6 @@
 import asyncio
 import json
+from os import getenv
 from typing import Optional
 import aiohttp
 import requests
@@ -7,7 +8,7 @@ import requests
 from .db import *
 
 
-API_KEY = ""
+API_KEY = getenv("API_KEY")
 API_URL = "https://mcsrranked.com/api"
 HEADERS = {
     "User-Agent": "Mozilla/5.0 (X11; Linux i686; rv:110.0) Gecko/20100101 Firefox/110.0.",
@@ -243,8 +244,7 @@ class VersusMatches(Matches):
 
 class Match(API):
     _additions: int = 0
-    _conn = None
-    _cursor = None
+    _conn, _cursor = start(getenv("DB_PATH"))
 
     def __init__(
         self,

@@ -9,7 +9,6 @@ description = "Utilities for ranked projects"
 authors = [{name = "Naddy"}]
 dependencies = [
     "aiohttp",
-    "dotenv",
     "requests",
 ]
 

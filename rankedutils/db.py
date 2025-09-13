@@ -222,7 +222,9 @@ CREATE TABLE IF NOT EXISTS runs (
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_player_uuid ON runs (player_uuid)")
 
 
-def start(db_path: Path = constants.DB_PATH) -> tuple[sqlite3.Connection, sqlite3.Cursor]:
+def start(db_path: Path | None) -> tuple[sqlite3.Connection, sqlite3.Cursor]:
+    if not db_path:
+        raise ValueError("Database path must be provided")
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     return conn, cursor
