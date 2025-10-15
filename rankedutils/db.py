@@ -97,7 +97,7 @@ def get_nick(
     nick = query_db(
         cursor,
         "players",
-        items="nick",
+        items="nickname",
         uuid=uuid,
     )
     if nick:
