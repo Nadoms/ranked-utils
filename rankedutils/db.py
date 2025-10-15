@@ -90,6 +90,20 @@ def get_sb(
         return match[0][0]
 
 
+def get_nick(
+    cursor: sqlite3.Cursor,
+    uuid: str,
+) -> Optional[str]:
+    nick = query_db(
+        cursor,
+        "players",
+        items="nick",
+        uuid=uuid,
+    )
+    if nick:
+        return nick[0][0]
+
+
 def insert_match(
     cursor: sqlite3.Cursor,
     match: dict[str, any],
