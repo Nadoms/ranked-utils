@@ -1,7 +1,7 @@
 from . import constants
 
 
-def get_splits_naive(match):
+def get_splits_naive(match: dict):
     timeline = list(reversed(match["timelines"]))
     completion_time = match["result"]["time"] if not match["forfeited"] else None
     winner = match["result"]["uuid"]
@@ -30,3 +30,27 @@ def get_splits_naive(match):
         player_split_times[uuid] = split_times
 
     return player_split_times
+
+
+def get_event_times(desired_event: str, timeline: dict, uuid: str | None = None) -> list[int]:
+    events = [
+        event["time"]
+        for event in timeline
+        if event["type"] == desired_event
+        and uuid is None or event["uuid"] == uuid
+    ]
+    return events
+
+
+def get_throw_rate(uuid: str, detailed_matches: dict):
+    throws = 0
+    match_count = 0
+    for match in detailed_matches:
+        match_count += 1
+        if any(
+            event["type"]
+            in ("projectelo.timeline.reset", "projectelo.timeline.death")
+            for event in match["timelines"]
+            if event["uuid"] == uuid
+        ):
+            throws += 1
