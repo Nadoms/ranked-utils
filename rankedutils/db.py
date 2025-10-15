@@ -1,4 +1,5 @@
 import json
+from os import getenv
 from pathlib import Path
 import sqlite3
 from typing import Optional
@@ -238,7 +239,9 @@ CREATE TABLE IF NOT EXISTS runs (
 
 def start(db_path: Path | None) -> tuple[sqlite3.Connection, sqlite3.Cursor]:
     if not db_path:
-        raise ValueError("Database path must be provided")
+        db_path = getenv("DB_PATH")
+        if not db_path:
+            raise ValueError("Database path must be provided")
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     return conn, cursor

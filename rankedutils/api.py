@@ -244,7 +244,7 @@ class VersusMatches(Matches):
 
 class Match(API):
     _additions: int = 0
-    _conn, _cursor = start(getenv("DB_PATH"))
+    _conn, _cursor = start()
 
     def __init__(
         self,
