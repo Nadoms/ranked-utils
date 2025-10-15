@@ -1,7 +1,6 @@
 import asyncio
 import json
 from os import getenv
-from typing import Optional
 import aiohttp
 import requests
 
@@ -131,7 +130,7 @@ class User(API):
         self,
         name: str,
         *,
-        season: Optional[int] = None,
+        season: int | None = None,
     ):
         self.name = name
         self.season = season
@@ -170,12 +169,12 @@ class RecentMatches(Matches):
     def __init__(
         self,
         *,
-        before: Optional[int] = None,
-        after: Optional[int] = None,
+        before: int | None = None,
+        after: int | None = None,
         count: int = 100,
-        type: Optional[int] = None,
-        tag: Optional[str] = None,
-        season: Optional[int] = None,
+        type: int | None = None,
+        tag: str | None = None,
+        season: int | None = None,
         excludedecay: bool = True,
     ):
         self.excludedecay = excludedecay
@@ -197,11 +196,11 @@ class UserMatches(Matches):
         self,
         name: str,
         *,
-        before: Optional[int] = None,
-        after: Optional[int] = None,
+        before: int | None = None,
+        after: int | None = None,
         count: int = 100,
-        type: Optional[int] = None,
-        season: Optional[int] = None,
+        type: int | None = None,
+        season: int | None = None,
         excludedecay: bool = True,
     ):
         self.name = name
@@ -224,11 +223,11 @@ class VersusMatches(Matches):
         name_1: str,
         name_2: str,
         *,
-        before: Optional[int] = None,
-        after: Optional[int] = None,
+        before: int | None = None,
+        after: int | None = None,
         count: int = 100,
-        type: Optional[int] = None,
-        season: Optional[int] = None,
+        type: int | None = None,
+        season: int | None = None,
     ):
         self.name_1 = name_1
         self.name_2 = name_2
@@ -349,7 +348,7 @@ class Versus(API):
         name_1: str,
         name_2: str,
         *,
-        season: Optional[int] = None,
+        season: int | None = None,
     ):
         self.name_1 = name_1
         self.name_2 = name_2
@@ -370,7 +369,7 @@ class WeeklyRace(API):
     def __init__(
         self,
         *,
-        id: Optional[int] = None,
+        id: int | None = None,
     ):
         self.id = id
         super().__init__(f"weekly-race/{self.id}")
@@ -381,7 +380,7 @@ class Leaderboard(API):
     def __init__(
         self,
         directory: str,
-        season: Optional[int],
+        season: int | None,
     ):
         self.season = season
         super().__init__(directory)
@@ -393,8 +392,8 @@ class EloLeaderboard(Leaderboard):
     def __init__(
         self,
         *,
-        season: Optional[int],
-        country: Optional[str],
+        season: int | None,
+        country: str | None,
     ):
         self.country = country
         super().__init__(
@@ -409,8 +408,8 @@ class PhaseLeaderboard(Leaderboard):
     def __init__(
         self,
         *,
-        season: Optional[int],
-        country: Optional[str],
+        season: int | None,
+        country: str | None,
     ):
         self.country = country
         super().__init__(
@@ -425,7 +424,7 @@ class RecordLeaderboard(Leaderboard):
     def __init__(
         self,
         *,
-        season: Optional[int],
+        season: int | None,
         distinct: bool = True,
     ):
         self.distinct = distinct

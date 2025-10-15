@@ -2,7 +2,6 @@ import json
 from os import getenv
 from pathlib import Path
 import sqlite3
-from typing import Optional
 
 from . import constants
 
@@ -11,8 +10,8 @@ def query_db(
     cursor: sqlite3.Cursor,
     table: str = "matches",
     items: str = "*",
-    order: Optional[str] = None,
-    limit: Optional[int] = None,
+    order: str | None = None,
+    limit: int | None = None,
     debug: bool = False,
     **kwargs: any,
 ) -> list[any]:
@@ -44,7 +43,7 @@ def get_elo(
     cursor: sqlite3.Cursor,
     uuid: str,
     season: int = constants.SEASON,
-) -> Optional[int]:
+) -> int | None:
     run = query_db(
         cursor,
         "runs",
@@ -75,7 +74,7 @@ def get_sb(
     cursor: sqlite3.Cursor,
     uuid: str,
     season: int = constants.SEASON,
-) -> Optional[int]:
+) -> int | None:
     match = query_db(
         cursor,
         "matches",
@@ -94,7 +93,7 @@ def get_sb(
 def get_nick(
     cursor: sqlite3.Cursor,
     uuid: str,
-) -> Optional[str]:
+) -> str | None:
     nick = query_db(
         cursor,
         "players",
@@ -237,7 +236,7 @@ CREATE TABLE IF NOT EXISTS runs (
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_player_uuid ON runs (player_uuid)")
 
 
-def start(db_path: Path | None) -> tuple[sqlite3.Connection, sqlite3.Cursor]:
+def start(db_path: Path | None = None) -> tuple[sqlite3.Connection, sqlite3.Cursor]:
     if not db_path:
         db_path = getenv("DB_PATH")
         if not db_path:
