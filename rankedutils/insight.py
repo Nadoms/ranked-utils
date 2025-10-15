@@ -54,3 +54,5 @@ def get_throw_rate(uuid: str, detailed_matches: dict):
             if event["uuid"] == uuid
         ):
             throws += 1
+
+    return round(throws / match_count * 100, 1)
