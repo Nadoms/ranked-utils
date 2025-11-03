@@ -47,7 +47,7 @@ def query_db(
     for key in kwargs:
         conditions.append(f"{key} = :{key}")
 
-    where_clause = "WHERE " + " AND ".join(conditions) if conditions else "1=1"
+    where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
     order_clause = f"ORDER BY {order}" if order else ""
     limit_clause = f"LIMIT {limit}" if limit else ""
 
