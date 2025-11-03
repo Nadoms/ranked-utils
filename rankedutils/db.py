@@ -15,6 +15,33 @@ def query_db(
     debug: bool = False,
     **kwargs: any,
 ) -> list[any]:
+    """
+    matches keys:
+        id
+        type
+        season
+        category
+        gameMode
+        result_uuid
+        time
+        forfeited
+        decayed
+        season
+        date
+        seedType
+        bastionType
+        tag
+        replayExist
+    players keys:
+        uuid
+        nickname
+    runs keys:
+        match_id
+        player_uuid
+        change
+        eloRate
+        timeline
+    """
     conditions = []
 
     for key in kwargs:
