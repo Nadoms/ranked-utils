@@ -42,6 +42,16 @@ def get_event_times(desired_event: str, timeline: dict, uuid: str | None = None)
     return events
 
 
+def get_match_completion(uuid: str, match: dict) -> int | None:
+    if not match["forfeited"] and match["result"]["uuid"] == uuid:
+        return match["result"]["time"]
+    return None
+
+
+def get_match_elo(uuid: str, match: dict) -> int | None:
+    return next(change["eloRate"] for change in match["changes"] if change["uuid"] == uuid)
+
+
 def get_throw_rate(uuid: str, detailed_matches: dict):
     throws = 0
     match_count = 0
