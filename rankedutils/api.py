@@ -70,8 +70,7 @@ class API():
             if kwargs[key] is None:
                 continue
             if isinstance(kwargs[key], bool):
-                if kwargs[key]:
-                    parameters.append(key)
+                parameters.append(f"{key}={int(kwargs[key])}")
                 continue
             parameters.append(f"{key}={kwargs[key]}")
         self.url += "&" + "&".join(parameters)
