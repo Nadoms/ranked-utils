@@ -103,9 +103,9 @@ class API():
 
     def _handle_response(self, response: dict[str, any]) -> dict[str, any]:
         if response["status"] == "error":
-            if response["data"] == "Too many requests":
+            if response["data"]["error"] == "Too many requests":
                 raise APIRateLimitError(self.url)
-            elif response["data"] in NOT_FOUND_DATA:
+            elif response["data"]["error"] in NOT_FOUND_DATA:
                 raise APINotFoundError(self.url)
             else:
                 raise APIError(self.url)
