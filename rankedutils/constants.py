@@ -4,8 +4,8 @@ from pathlib import Path
 SEASON = 10
 FIRST_MATCHES = [0, 100876, 338897, 519262, 674676, 909752, 1168208, 1499237, 1970845]
 FINAL_MATCHES = [100875, 338896, 519261, 674675, 909751, 1168207, 1499236, 1970844, 3000000]
-FOOTER_TEXT = "By @nadoms • Send bugs & feedback! • youtube.com/@nqdoms"
-FOOTER_ICON = "https://cdn.discordapp.com/avatars/298936021557706754/a_60fb14a1dbfb0d33f3b02cc33579dacf?size=256"
+FOOTER_TEXT = "Support me! • ko-fi.com/naddy_mc • youtube.com/@naddy_mc"
+FOOTER_ICON = "https://s3-eu-west-1.amazonaws.com/tpd/logos/6135e97910dcdc001dbff909/0x0.png"
 SPLIT_CODES = [
     "story.enter_the_nether",
     "nether.find_bastion",
