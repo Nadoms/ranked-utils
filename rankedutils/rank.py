@@ -115,9 +115,9 @@ def get_division(elo):
         return ""
 
     if rank == Rank.COAL:
-        if elo < 200:
-            return "I"
         if elo < 400:
+            return "I"
+        if elo < 500:
             return "II"
         return "III"
 
