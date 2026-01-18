@@ -86,7 +86,7 @@ class API():
         except requests.exceptions.Timeout:
             raise APITimeoutError(self.url)
 
-        return self._handle_response(response)
+        return self._handle_response(response, force_request)
 
     async def get_async(self, force_request: bool = False) -> dict[str, any]:
         if not force_request:
@@ -103,7 +103,7 @@ class API():
 
         return self._handle_response(response)
 
-    def _handle_response(self, response: dict[str, any]) -> dict[str, any]:
+    def _handle_response(self, response: dict[str, any], force_request: bool = False) -> dict[str, any]:
         if response["status"] == "error":
             if response["data"]["error"] == "Too many requests":
                 raise APIRateLimitError(self.url)
@@ -112,7 +112,8 @@ class API():
             else:
                 raise APIError(self.url)
 
-        self._save_result(response["data"])
+        if not force_request:
+            self._save_result(response["data"])
         return response["data"]
 
     def _save_result(self, data: dict[str, any]):
