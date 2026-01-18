@@ -75,10 +75,11 @@ class API():
             parameters.append(f"{key}={kwargs[key]}")
         self.url += "&" + "&".join(parameters)
 
-    def get(self) -> dict[str, any]:
-        cached_result = self._check_db()
-        if cached_result is not None:
-            return cached_result
+    def get(self, force_request: bool = False) -> dict[str, any]:
+        if not force_request:
+            cached_result = self._check_db()
+            if cached_result is not None:
+                return cached_result
 
         try:
             response = requests.get(self.url, headers=HEADERS, timeout=5).json()
@@ -87,10 +88,11 @@ class API():
 
         return self._handle_response(response)
 
-    async def get_async(self) -> dict[str, any]:
-        cached_result = self._check_db()
-        if cached_result is not None:
-            return cached_result
+    async def get_async(self, force_request: bool = False) -> dict[str, any]:
+        if not force_request:
+            cached_result = self._check_db()
+            if cached_result is not None:
+                return cached_result
 
         async with aiohttp.ClientSession() as session:
             try:
