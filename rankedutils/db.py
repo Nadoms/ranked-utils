@@ -180,7 +180,7 @@ INSERT INTO matches (
     for player in match["players"]:
         cursor.execute(
             """
-INSERT OR IGNORE INTO players (
+INSERT OR REPLACE INTO players (
     uuid,
     nickname
 ) VALUES (?, ?)
