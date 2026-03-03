@@ -269,7 +269,6 @@ def start(db_path: Path | None = None) -> tuple[sqlite3.Connection, sqlite3.Curs
         if not db_path:
             raise ValueError("Database path must be provided")
     conn = sqlite3.connect(db_path, timeout=30.0)
-    conn.execute("PRAGMA journal_mode=WAL")
     cursor = conn.cursor()
     return conn, cursor
 
