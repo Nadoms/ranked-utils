@@ -52,8 +52,8 @@ def get_match_elo(uuid: str, match: dict) -> int | None:
     return next(change["eloRate"] for change in match["changes"] if change["uuid"] == uuid)
 
 
-def get_throw_rate(uuid: str, detailed_matches: dict):
-    throws = 0
+def get_choke_rate(uuid: str, detailed_matches: dict) -> float:
+    chokes = 0
     match_count = 0
     for match in detailed_matches:
         match_count += 1
@@ -63,6 +63,110 @@ def get_throw_rate(uuid: str, detailed_matches: dict):
             for event in match["timelines"]
             if event["uuid"] == uuid
         ):
-            throws += 1
+            chokes += 1
 
-    return round(throws / match_count * 100, 1)
+    return round(chokes / match_count * 100, 1)
+
+
+def get_comeback_rate(uuid: str, detailed_matches: dict) -> float:
+    comebacks = 0
+    chokes = 0
+    for match in detailed_matches:
+        if any(
+            event["type"]
+            in ("projectelo.timeline.reset", "projectelo.timeline.death")
+            for event in match["timelines"]
+            if event["uuid"] == uuid
+        ):
+            chokes += 1
+            if match["result"]["uuid"] == uuid:
+                comebacks += 1
+
+    return round(comebacks / chokes * 100, 1)
+
+
+def get_momentum(uuid: str, detailed_matches: dict) -> float:
+    momentum_info = {
+        "win": {
+            "wins": 0,
+            "losses": 0
+        },
+        "loss": {
+            "wins": 0,
+            "losses": 0
+        }
+    }
+    momentum_count = 0
+    previous_outcome = None
+
+    def outcome(match):
+        if match["result"]["uuid"] == uuid:
+            return "win"
+        if match["result"]["uuid"] is not None:
+            return "loss"
+        return None
+
+    for match in detailed_matches:
+        current_outcome = outcome(match)
+        if previous_outcome and current_outcome:
+            momentum_info[previous_outcome][current_outcome] += 1
+            momentum_count += 1
+
+        previous_outcome = current_outcome
+
+    momentum = (momentum_info["win"]["wins"] + momentum_info["loss"]["losses"] - momentum_info["wins"]["losses"] - momentum_info["loss"]["wins"]) / momentum_count
+    momentum = round(momentum, 2)
+
+    return momentum
+
+
+def fast_misc_stats(uuid: str, detailed_matches: dict) -> tuple[float, float, float]:
+    # sorry i duplicated code
+    comebacks = 0
+    chokes = 0
+    match_count = 0
+    momentum_info = {
+        "win": {
+            "wins": 0,
+            "losses": 0
+        },
+        "loss": {
+            "wins": 0,
+            "losses": 0
+        }
+    }
+    momentum_count = 0
+    previous_outcome = None
+
+    def outcome(match):
+        if match["result"]["uuid"] == uuid:
+            return "win"
+        if match["result"]["uuid"] is not None:
+            return "loss"
+        return None
+
+    for match in detailed_matches:
+        match_count += 1
+        if any(
+            event["type"]
+            in ("projectelo.timeline.reset", "projectelo.timeline.death")
+            for event in match["timelines"]
+            if event["uuid"] == uuid
+        ):
+            chokes += 1
+            if match["result"]["uuid"] == uuid:
+                comebacks += 1
+
+        current_outcome = outcome(match)
+        if previous_outcome and current_outcome:
+            momentum_info[previous_outcome][current_outcome] += 1
+            momentum_count += 1
+
+        previous_outcome = current_outcome
+
+    choke_rate = round(chokes / match_count * 100, 1)
+    comeback_rate = round(comebacks / chokes * 100, 1)
+    momentum = (momentum_info["win"]["wins"] + momentum_info["loss"]["losses"] - momentum_info["wins"]["losses"] - momentum_info["loss"]["wins"]) / momentum_count
+    momentum = round(momentum, 2)
+
+    return choke_rate, comeback_rate, momentum
