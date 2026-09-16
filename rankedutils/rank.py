@@ -2,6 +2,8 @@ from enum import IntEnum
 import json
 from os import path
 
+from . import constants
+
 
 RANKS = ["Coal", "Iron", "Gold", "Emerald", "Diamond", "Netherite", "Unranked"]
 
@@ -137,8 +139,9 @@ def get_division(elo):
     return "III"
 
 
-def get_elo_equivalent(value, attr_type):
-    fp = path.join("src", "models", "models.json")
+def get_elo_equivalent(value, attr_type, season = constants.SEASON):
+    season_suffix = "" if int(season) == constants.SEASON else f"_s{season}"
+    fp = path.join("src", "models", f"models{season_suffix}.json")
     with open(fp, "r", encoding="UTF-8") as f:
         models = json.load(f)
 
