@@ -10,11 +10,12 @@ def query_db(
     cursor: sqlite3.Cursor,
     table: str = "matches",
     items: str = "*",
+    join: str | None = None,
     order: str | None = None,
     limit: int | None = None,
     debug: bool = False,
     **kwargs: any,
-) -> list[any]:
+) -> sqlite3.Cursor:
     """
     matches keys:
         id
@@ -48,11 +49,13 @@ def query_db(
         conditions.append(f"{key} = :{key}")
 
     where_clause = f"WHERE {' AND '.join(conditions)}" if conditions else ""
+    join_clause = f"JOIN {join}" if join else ""
     order_clause = f"ORDER BY {order}" if order else ""
     limit_clause = f"LIMIT {limit}" if limit else ""
 
     query = f"""
 SELECT {items} FROM {table}
+{join_clause}
 {where_clause}
 {order_clause}
 {limit_clause}
@@ -62,8 +65,7 @@ SELECT {items} FROM {table}
         cursor.execute(f"EXPLAIN QUERY PLAN {query}", kwargs)
         print(cursor.fetchone())
 
-    cursor.execute(query, kwargs)
-    return cursor.fetchall()
+    return cursor.execute(query, kwargs)
 
 
 def get_elo(
@@ -71,26 +73,28 @@ def get_elo(
     uuid: str,
     season: int = constants.SEASON,
 ) -> int | None:
-    run = query_db(
-        cursor,
-        "runs",
-        items="eloRate, change, match_id",
-        order="match_id DESC",
-        limit=1,
-        player_uuid=uuid
+    run = next(
+        query_db(
+            cursor,
+            "runs",
+            items="eloRate, change, match_id",
+            order="match_id DESC",
+            limit=1,
+            player_uuid=uuid
+        ),
+        None
     )
-    if not run:
+    if not run or not run[0]:
         return None
-    run = run[0]
-    if not run[0]:
-        return None
-    match = query_db(
-        cursor,
-        "matches",
-        items="season",
-        limit=1,
-        id=run[2]
-    )[0]
+    match = next(
+        query_db(
+            cursor,
+            "matches",
+            items="season",
+            limit=1,
+            id=run[2]
+        )
+    )
     if int(match[0]) != season:
         return None
     current_elo = run[0] + run[1]
@@ -102,33 +106,39 @@ def get_sb(
     uuid: str,
     season: int = constants.SEASON,
 ) -> int | None:
-    match = query_db(
-        cursor,
-        "matches",
-        items="time",
-        order="time ASC",
-        limit=1,
-        type=2,
-        result_uuid=uuid,
-        forfeited=False,
-        season=season,
+    match = next(
+        query_db(
+            cursor,
+            "matches",
+            items="time",
+            order="time ASC",
+            limit=1,
+            type=2,
+            result_uuid=uuid,
+            forfeited=False,
+            season=season,
+        ),
+        None
     )
     if match:
-        return match[0][0]
+        return match[0]
 
 
 def get_nick(
     cursor: sqlite3.Cursor,
     uuid: str,
 ) -> str | None:
-    nick = query_db(
-        cursor,
-        "players",
-        items="nickname",
-        uuid=uuid,
+    nick = next(
+        query_db(
+            cursor,
+            "players",
+            items="nickname",
+            uuid=uuid,
+        ),
+        None
     )
     if nick:
-        return nick[0][0]
+        return nick[0]
 
 
 def insert_match(
@@ -261,6 +271,7 @@ CREATE TABLE IF NOT EXISTS runs (
     """)
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_match_id ON runs (match_id)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_player_uuid ON runs (player_uuid)")
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_matches_season_type_decayed ON matches (season, type, decayed)")
 
 
 def start(db_path: Path | None = None) -> tuple[sqlite3.Connection, sqlite3.Cursor]:

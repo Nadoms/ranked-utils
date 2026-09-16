@@ -259,26 +259,30 @@ class Match(API):
         Match._additions += 1
 
     def _check_db(self) -> dict[str, any]:
-        match = query_db(Match._cursor, id=self.id)
+        match = next(query_db(Match._cursor, id=self.id), None)
         if not match:
             return None
 
-        runs = query_db(
-            Match._cursor,
-            table="runs",
-            match_id=self.id
+        runs = list(
+            query_db(
+                Match._cursor,
+                table="runs",
+                match_id=self.id
+            )
         )
 
         uuids = [run[1] for run in runs]
         players = []
         for uuid in uuids:
-            players += query_db(
-                Match._cursor,
-                table="players",
-                uuid=uuid
+            players.extend(
+                query_db(
+                    Match._cursor,
+                    table="players",
+                    uuid=uuid
+                )
             )
 
-        return self._convert(match[0], players, runs)
+        return self._convert(match, players, runs)
 
     def _convert(
         self,
