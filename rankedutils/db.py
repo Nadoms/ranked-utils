@@ -10,6 +10,7 @@ def query_db(
     cursor: sqlite3.Cursor,
     table: str = "matches",
     items: str = "*",
+    where: str | None = None,
     join: str | None = None,
     order: str | None = None,
     limit: int | None = None,
@@ -43,7 +44,7 @@ def query_db(
         eloRate
         timeline
     """
-    conditions = []
+    conditions = [where]
 
     for key in kwargs:
         conditions.append(f"{key} = :{key}")
