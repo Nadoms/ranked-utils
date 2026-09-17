@@ -44,7 +44,7 @@ def query_db(
         eloRate
         timeline
     """
-    conditions = [where]
+    conditions = [where] if where else []
 
     for key in kwargs:
         conditions.append(f"{key} = :{key}")
