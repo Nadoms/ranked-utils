@@ -52,8 +52,8 @@ def get_match_elo(uuid: str, match: dict) -> int | None:
     return next(change["eloRate"] for change in match["changes"] if change["uuid"] == uuid)
 
 
-def get_throw_rate(uuid: str, detailed_matches: dict):
-    throws = 0
+def get_choke_rate(uuid: str, detailed_matches: dict):
+    chokes = 0
     match_count = 0
     for match in detailed_matches:
         match_count += 1
@@ -63,9 +63,9 @@ def get_throw_rate(uuid: str, detailed_matches: dict):
             for event in match["timelines"]
             if event["uuid"] == uuid
         ):
-            throws += 1
+            chokes += 1
 
-    return round(throws / match_count * 100, 1)
+    return round(chokes / match_count * 100, 1)
 
 
 def get_comeback_rate(uuid: str, detailed_matches: dict) -> float:
