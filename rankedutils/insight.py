@@ -65,7 +65,7 @@ def get_choke_rate(uuid: str, detailed_matches: dict):
         ):
             chokes += 1
 
-    return round(chokes / match_count * 100, 1)
+    return round(chokes / match_count * 100, 1) if match_count else 0
 
 
 def get_resilience(uuid: str, detailed_matches: dict) -> float:
@@ -82,11 +82,11 @@ def get_resilience(uuid: str, detailed_matches: dict) -> float:
             if match["result"]["uuid"] == uuid:
                 comebacks += 1
 
-    return round(comebacks / chokes * 100, 1)
+    return round(comebacks / chokes * 100, 1) if chokes else 0
 
 
 def get_momentum(uuid: str, detailed_matches: dict) -> float:
-    momentum_info = {
+    mom_info = {
         "win": {
             "wins": 0,
             "losses": 0
@@ -96,7 +96,8 @@ def get_momentum(uuid: str, detailed_matches: dict) -> float:
             "losses": 0
         }
     }
-    momentum_count = 0
+    non_draws = 0
+    mom_count = 0
     previous_outcome = None
 
     def outcome(match):
@@ -108,14 +109,23 @@ def get_momentum(uuid: str, detailed_matches: dict) -> float:
 
     for match in detailed_matches:
         current_outcome = outcome(match)
-        if previous_outcome and current_outcome:
-            momentum_info[previous_outcome][current_outcome] += 1
-            momentum_count += 1
+        if not current_outcome:
+            continue
+        if previous_outcome:
+            mom_info[previous_outcome][current_outcome] += 1
+            mom_count += 1
 
+        non_draws += 1
         previous_outcome = current_outcome
 
-    momentum = (momentum_info["win"]["wins"] + momentum_info["loss"]["losses"] - momentum_info["wins"]["losses"] - momentum_info["loss"]["wins"]) / momentum_count
-    momentum = round(momentum, 2)
+    if non_draws == 0 or mom_count == 0:
+        momentum = 0
+    else:
+        winrate = (mom_info["win"]["wins"] + mom_info["loss"]["wins"]) / non_draws
+        if winrate == 0 or winrate == 1:
+            momentum = 0
+        else:
+            momentum = round((mom_info["win"]["wins"] / mom_count - winrate ** 2) / (winrate * (1 - winrate)), 2)
 
     return momentum
 
@@ -125,7 +135,7 @@ def fast_misc_stats(uuid: str, detailed_matches: dict) -> tuple[float, float, fl
     comebacks = 0
     chokes = 0
     match_count = 0
-    momentum_info = {
+    mom_info = {
         "win": {
             "wins": 0,
             "losses": 0
@@ -135,7 +145,8 @@ def fast_misc_stats(uuid: str, detailed_matches: dict) -> tuple[float, float, fl
             "losses": 0
         }
     }
-    momentum_count = 0
+    non_draws = 0
+    mom_count = 0
     previous_outcome = None
 
     def outcome(match):
@@ -158,15 +169,25 @@ def fast_misc_stats(uuid: str, detailed_matches: dict) -> tuple[float, float, fl
                 comebacks += 1
 
         current_outcome = outcome(match)
-        if previous_outcome and current_outcome:
-            momentum_info[previous_outcome][current_outcome] += 1
-            momentum_count += 1
+        if not current_outcome:
+            continue
+        if previous_outcome:
+            mom_info[previous_outcome][current_outcome] += 1
+            mom_count += 1
 
+        non_draws += 1
         previous_outcome = current_outcome
 
-    choke_rate = round(chokes / match_count * 100, 1)
-    resilience = round(comebacks / chokes * 100, 1)
-    momentum = (momentum_info["win"]["wins"] + momentum_info["loss"]["losses"] - momentum_info["wins"]["losses"] - momentum_info["loss"]["wins"]) / momentum_count
-    momentum = round(momentum, 2)
+    choke_rate = round(chokes / match_count * 100, 1) if match_count else 0
+    resilience = round(comebacks / chokes * 100, 1) if chokes else 0
+
+    if non_draws == 0 or mom_count == 0:
+        momentum = 0
+    else:
+        winrate = (mom_info["win"]["wins"] + mom_info["loss"]["wins"]) / non_draws
+        if winrate == 0 or winrate == 1:
+            momentum = 0
+        else:
+            momentum = round((mom_info["win"]["wins"] / mom_count - winrate ** 2) / (winrate * (1 - winrate)), 2)
 
     return choke_rate, resilience, momentum
