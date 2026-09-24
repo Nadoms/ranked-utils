@@ -122,12 +122,17 @@ def get_momentum(uuid: str, detailed_matches: dict) -> float:
         momentum = 0
     else:
         winrate = (mom_info["win"]["win"] + mom_info["loss"]["win"]) / non_draws
-        if winrate == 0 or winrate == 1:
-            momentum = 0
-        else:
-            momentum = round((mom_info["win"]["win"] / mom_count - winrate ** 2) / (winrate * (1 - winrate)), 2)
+        momentum = calc_momentum(mom_info["win"]["win"], mom_info["loss"]["loss"], mom_count, winrate)
 
     return momentum
+
+
+def calc_momentum(winwin: int, lossloss: int, count: int, winrate: float) -> float:
+    repeat_rate = (winwin + lossloss) / count
+    exp_repeat_rate = winrate ** 2 + (1 - winrate) ** 2
+    if exp_repeat_rate == 1:
+        return 0
+    return round((repeat_rate - exp_repeat_rate) / (1 - exp_repeat_rate), 2)
 
 
 def fast_misc_stats(uuid: str, detailed_matches: dict) -> tuple[float, float, float]:
@@ -185,9 +190,6 @@ def fast_misc_stats(uuid: str, detailed_matches: dict) -> tuple[float, float, fl
         momentum = 0
     else:
         winrate = (mom_info["win"]["win"] + mom_info["loss"]["win"]) / non_draws
-        if winrate == 0 or winrate == 1:
-            momentum = 0
-        else:
-            momentum = round((mom_info["win"]["win"] / mom_count - winrate ** 2) / (winrate * (1 - winrate)), 2)
+        momentum = calc_momentum(mom_info["win"]["win"], mom_info["loss"]["loss"], mom_count, winrate)
 
     return choke_rate, resilience, momentum
