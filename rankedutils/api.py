@@ -10,7 +10,7 @@ from .db import *
 API_KEY = getenv("API_KEY")
 API_URL = "https://mcsrranked.com/api"
 HEADERS = {
-    "User-Agent": "Mozilla/5.0 (X11; Linux i686; rv:110.0) Gecko/20100101 Firefox/110.0.",
+    "User-Agent": "ranked-cards/1.0 (+https://github.com/nadoms/Ranked-Cards; @nadoms / @naddy_mc)",
     "API-Key": API_KEY,
 }
 NOT_FOUND_DATA = [
