@@ -58,7 +58,7 @@ def get_ff_loss(response, season_or_total):
     forfeits = response["statistics"][season_or_total]["forfeits"]["ranked"]
     losses = max(response["statistics"][season_or_total]["loses"]["ranked"], 1)
 
-    forfeit_loss = round(forfeits / losses * 100, 1)
+    forfeit_loss = round(forfeits / losses, 3)
     return forfeit_loss
 
 
@@ -66,7 +66,7 @@ def get_completion_rate(response, season_or_total):
     completions = response["statistics"][season_or_total]["completions"]["ranked"]
     match_count = max(response["statistics"][season_or_total]["playedMatches"]["ranked"], 1)
 
-    completion_rate = round(completions / match_count * 100, 1)
+    completion_rate = round(completions / match_count, 3)
     return completion_rate
 
 

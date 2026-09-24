@@ -65,7 +65,7 @@ def get_choke_rate(uuid: str, detailed_matches: dict):
         ):
             chokes += 1
 
-    return round(chokes / match_count * 100, 1) if match_count else 0
+    return round(chokes / match_count, 3) if match_count else 0
 
 
 def get_resilience(uuid: str, detailed_matches: dict) -> float:
@@ -82,7 +82,7 @@ def get_resilience(uuid: str, detailed_matches: dict) -> float:
             if match["result"]["uuid"] == uuid:
                 comebacks += 1
 
-    return round(comebacks / chokes * 100, 1) if chokes else 0
+    return round(comebacks / chokes, 3) if chokes else 0
 
 
 def get_momentum(uuid: str, detailed_matches: dict) -> float:
@@ -183,8 +183,8 @@ def fast_misc_stats(uuid: str, detailed_matches: dict) -> tuple[float, float, fl
         non_draws += 1
         previous_outcome = current_outcome
 
-    choke_rate = round(chokes / match_count * 100, 1) if match_count else 0
-    resilience = round(comebacks / chokes * 100, 1) if chokes else 0
+    choke_rate = round(chokes / match_count, 3) if match_count else 0
+    resilience = round(comebacks / chokes, 3) if chokes else 0
 
     if non_draws == 0 or mom_count == 0:
         momentum = 0
