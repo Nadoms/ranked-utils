@@ -132,7 +132,7 @@ def calc_momentum(winwin: int, lossloss: int, count: int, winrate: float) -> flo
     exp_repeat_rate = winrate ** 2 + (1 - winrate) ** 2
     if exp_repeat_rate == 1:
         return 0
-    return round((repeat_rate - exp_repeat_rate) / (1 - exp_repeat_rate), 2)
+    return round((repeat_rate - exp_repeat_rate) / (1 - exp_repeat_rate), 3)
 
 
 def fast_misc_stats(uuid: str, detailed_matches: dict) -> tuple[float, float, float]:
