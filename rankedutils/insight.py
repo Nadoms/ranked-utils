@@ -88,12 +88,12 @@ def get_resilience(uuid: str, detailed_matches: dict) -> float:
 def get_momentum(uuid: str, detailed_matches: dict) -> float:
     mom_info = {
         "win": {
-            "wins": 0,
-            "losses": 0
+            "win": 0,
+            "loss": 0
         },
         "loss": {
-            "wins": 0,
-            "losses": 0
+            "win": 0,
+            "loss": 0
         }
     }
     non_draws = 0
@@ -121,11 +121,11 @@ def get_momentum(uuid: str, detailed_matches: dict) -> float:
     if non_draws == 0 or mom_count == 0:
         momentum = 0
     else:
-        winrate = (mom_info["win"]["wins"] + mom_info["loss"]["wins"]) / non_draws
+        winrate = (mom_info["win"]["win"] + mom_info["loss"]["win"]) / non_draws
         if winrate == 0 or winrate == 1:
             momentum = 0
         else:
-            momentum = round((mom_info["win"]["wins"] / mom_count - winrate ** 2) / (winrate * (1 - winrate)), 2)
+            momentum = round((mom_info["win"]["win"] / mom_count - winrate ** 2) / (winrate * (1 - winrate)), 2)
 
     return momentum
 
@@ -137,12 +137,12 @@ def fast_misc_stats(uuid: str, detailed_matches: dict) -> tuple[float, float, fl
     match_count = 0
     mom_info = {
         "win": {
-            "wins": 0,
-            "losses": 0
+            "win": 0,
+            "loss": 0
         },
         "loss": {
-            "wins": 0,
-            "losses": 0
+            "win": 0,
+            "loss": 0
         }
     }
     non_draws = 0
@@ -184,10 +184,10 @@ def fast_misc_stats(uuid: str, detailed_matches: dict) -> tuple[float, float, fl
     if non_draws == 0 or mom_count == 0:
         momentum = 0
     else:
-        winrate = (mom_info["win"]["wins"] + mom_info["loss"]["wins"]) / non_draws
+        winrate = (mom_info["win"]["win"] + mom_info["loss"]["win"]) / non_draws
         if winrate == 0 or winrate == 1:
             momentum = 0
         else:
-            momentum = round((mom_info["win"]["wins"] / mom_count - winrate ** 2) / (winrate * (1 - winrate)), 2)
+            momentum = round((mom_info["win"]["win"] / mom_count - winrate ** 2) / (winrate * (1 - winrate)), 2)
 
     return choke_rate, resilience, momentum
