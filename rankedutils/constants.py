@@ -30,3 +30,4 @@ OW_MAPPING = {
     "SHIPWRECK": "ship",
     "VILLAGE": "village",
 }
+USER_AGENT = "ranked-cards/1.0 (+https://github.com/nadoms/Ranked-Cards; @nadoms / @naddy_mc)"

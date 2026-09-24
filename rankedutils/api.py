@@ -5,12 +5,13 @@ import aiohttp
 import requests
 
 from .db import *
+from . import constants
 
 
 API_KEY = getenv("API_KEY")
 API_URL = "https://mcsrranked.com/api"
 HEADERS = {
-    "User-Agent": "ranked-cards/1.0 (+https://github.com/nadoms/Ranked-Cards; @nadoms / @naddy_mc)",
+    "User-Agent": constants.USER_AGENT,
     "API-Key": API_KEY,
 }
 NOT_FOUND_DATA = [
