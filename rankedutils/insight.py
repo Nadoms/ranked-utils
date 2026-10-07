@@ -52,7 +52,17 @@ def get_match_elo(uuid: str, match: dict) -> int | None:
     return next(change["eloRate"] for change in match["changes"] if change["uuid"] == uuid)
 
 
-def get_choke_rate(uuid: str, detailed_matches: dict):
+def get_avg_opponent_elo(uuid: str, matches: list) -> int | None:
+    opponent_elos = []
+    for match in matches:
+        for player in match["players"]:
+            if player["uuid"] == uuid or player["eloRate"] is None:
+                continue
+            opponent_elos.append(player["eloRate"])
+    return round(sum(opponent_elos) / len(opponent_elos)) if opponent_elos else None
+
+
+def get_choke_rate(uuid: str, detailed_matches: list):
     chokes = 0
     match_count = 0
     for match in detailed_matches:
@@ -68,7 +78,7 @@ def get_choke_rate(uuid: str, detailed_matches: dict):
     return round(chokes / match_count, 3) if match_count else 0
 
 
-def get_resilience(uuid: str, detailed_matches: dict) -> float:
+def get_resilience(uuid: str, detailed_matches: list) -> float:
     comebacks = 0
     chokes = 0
     for match in detailed_matches:
@@ -85,7 +95,7 @@ def get_resilience(uuid: str, detailed_matches: dict) -> float:
     return round(comebacks / chokes, 3) if chokes else 0
 
 
-def get_momentum(uuid: str, detailed_matches: dict) -> float:
+def get_momentum(uuid: str, detailed_matches: list) -> float:
     mom_info = {
         "win": {
             "win": 0,
@@ -135,7 +145,7 @@ def calc_momentum(winwin: int, lossloss: int, count: int, winrate: float) -> flo
     return round((repeat_rate - exp_repeat_rate) / (1 - exp_repeat_rate), 3)
 
 
-def fast_misc_stats(uuid: str, detailed_matches: dict) -> tuple[float, float, float]:
+def fast_misc_stats(uuid: str, detailed_matches: list) -> tuple[float, float, float]:
     # sorry i duplicated code
     comebacks = 0
     chokes = 0
