@@ -59,7 +59,8 @@ def get_avg_opponent_elo(uuid: str, matches: list) -> int | None:
             if player["uuid"] == uuid:
                 continue
             elo = get_match_elo(player["uuid"], match)
-            opponent_elos.append(elo)
+            if elo:
+                opponent_elos.append(elo)
     return round(sum(opponent_elos) / len(opponent_elos)) if opponent_elos else None
 
 
