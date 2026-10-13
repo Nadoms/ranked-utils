@@ -1,3 +1,4 @@
+from enum import StrEnum
 import json
 from os import getenv
 from pathlib import Path
@@ -34,6 +35,7 @@ def query_db(
         bastionType
         tag
         replayExist
+        seed_id
     players keys:
         uuid
         nickname
@@ -43,6 +45,25 @@ def query_db(
         change
         eloRate
         timeline
+    seeds keys:
+        id
+        overworld
+        bastion
+        structure_biome
+        bastion_biome
+        fortress_biome
+        structure_type
+        structure_contents
+        triples
+        doubles
+        singles
+        good_gaps
+        o_level
+        tower
+        front_diagonal
+        front_straight
+        back_diagonal
+        back_straight
     """
     conditions = [where] if where else []
 
@@ -166,8 +187,9 @@ INSERT INTO matches (
     seedType,
     bastionType,
     tag,
-    replayExist
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    replayExist,
+    seed_id
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             match.get("id"),
@@ -185,6 +207,7 @@ INSERT INTO matches (
             match.get("bastionType"),
             match.get("tag"),
             match.get("replayExist"),
+            match["seed"].get("id"),
         )
     )
 
@@ -231,6 +254,85 @@ INSERT INTO runs (
             )
         )
 
+    seed_info = match["seed"]
+    variations = parse_variations(seed_info["variations"])
+    cursor.execute(
+        """
+INSERT INTO seeds (
+    id,
+    overworld,
+    bastion,
+    structure_biome,
+    bastion_biome,
+    fortress_biome,
+    structure_type,
+    structure_contents,
+    triples,
+    doubles,
+    singles,
+    good_gaps,
+    o_level,
+    tower,
+    front_diagonal,
+    front_straight,
+    back_diagonal,
+    back_straight
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """,
+        (
+            seed_info.get("id"),
+            seed_info.get("overworld"),
+            seed_info.get("bastion"),
+            variations.get("structure_biome"),
+            seed_info.get("overworld"),
+            seed_info.get("overworld"),
+            seed_info.get("overworld"),
+            seed_info.get("overworld"),
+        )
+    )
+
+
+class Variation(StrEnum):
+    CHEST = "chest"
+    TYPE = "type"
+    BIOME = "biome"
+    STRUCTURE = "structure"
+    BASTION = "bastion"
+    FORTRESS = "fortress"
+    TRIPLE = "triple"
+    DOUBLE = "double"
+    SINGLE = "single"
+    END_SPAWN = "end_spawn"
+    END_TOWER = "end_tower"
+
+
+def parse_variations(variations: list[str]):
+    parsed_variations = {}
+    for variation in variations:
+        object, attribute, value = variation.split(":")
+        key = None
+        structure_contents = []
+
+        if object == Variation.BIOME:
+            if attribute in (Variation.STRUCTURE, Variation.BASTION, Variation.FORTRESS):
+                key = f"{attribute}_biome"
+        elif object == Variation.TYPE and object == Variation.STRUCTURE:
+            key = "structure_type"
+        elif object == Variation.CHEST and object == Variation.STRUCTURE:
+            structure_contents.append(value)
+        elif object == Variation.BASTION:
+            key = f"{attribute}s"
+        elif object == Variation.END_SPAWN:
+            key = "o_level"
+        elif object == Variation.END_TOWER:
+            key = "tower"
+
+        if key:
+            parsed_variations[key] = value
+
+    parsed_variations["structure_contents"] = json.dumps(structure_contents)
+    return parsed_variations
+
 
 def init_db(cursor: sqlite3.Cursor):
     cursor.execute("""
@@ -248,7 +350,9 @@ CREATE TABLE IF NOT EXISTS matches (
     seedType TEXT,
     bastionType TEXT,
     tag TEXT,
-    replayExist BOOLEAN
+    replayExist BOOLEAN,
+    seed_id INTEGER,
+    FOREIGN KEY (seed_id) REFERENCES seeds(id)
 )
     """)
 
@@ -270,6 +374,30 @@ CREATE TABLE IF NOT EXISTS runs (
     FOREIGN KEY (player_uuid) REFERENCES players(uuid)
 )
     """)
+
+    cursor.execute("""
+CREATE TABLE IF NOT EXISTS seeds (
+    id TEXT,
+    overworld TEXT,
+    bastion TEXT,
+    structure_biome TEXT,
+    bastion_biome TEXT,
+    fortress_biome TEXT,
+    structure_type TEXT,
+    structure_contents TEXT,
+    triples INTEGER,
+    doubles INTEGER,
+    singles INTEGER,
+    good_gaps INTEGER,
+    o_level INTEGER,
+    tower TEXT,
+    front_diagonal INTEGER,
+    front_straight INTEGER,
+    back_diagonal INTEGER,
+    back_straight INTEGER
+)
+    """)
+    cursor.execute("CREATE INDEX IF NOT EXISTS idx_seed_id ON matches (seed_id)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_match_id ON runs (match_id)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_player_uuid ON runs (player_uuid)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_matches_season_type_decayed ON matches (season, type, decayed)")
