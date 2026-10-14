@@ -54,8 +54,8 @@ def query_db(
         structure_type
         structure_contents
         triples
-        doubles
         singles
+        small_singles
         good_gaps
         o_level
         tower
@@ -269,8 +269,8 @@ INSERT OR IGNORE INTO seeds (
     structure_type,
     structure_contents,
     triples,
-    doubles,
     singles,
+    small_singles,
     good_gaps,
     o_level,
     tower,
@@ -284,14 +284,14 @@ INSERT OR IGNORE INTO seeds (
             seed_info.get("id"),
             seed_info.get("overworld"),
             seed_info.get("bastion"),
-            variations.get("structure_biome"),
+            variations.get("structure_biome") if seed_info.get("overworld") != "DESERT_TEMPLE" else "desert",
             variations.get("bastion_biome"),
             variations.get("fortress_biome"),
             variations.get("structure_type"),
             variations.get("structure_contents"),
             variations.get("triples"),
-            variations.get("doubles"),
             variations.get("singles"),
+            variations.get("small_singles"),
             variations.get("good_gaps"),
             variations.get("o_level"),
             variations.get("tower"),
@@ -311,8 +311,8 @@ class Variation(StrEnum):
     BASTION = "bastion"
     FORTRESS = "fortress"
     TRIPLE = "triple"
-    DOUBLE = "double"
     SINGLE = "single"
+    SMALL_SINGLE = "small_single"
     END_SPAWN = "end_spawn"
     END_TOWER = "end_tower"
 
@@ -332,7 +332,7 @@ def parse_variations(variations: list[str]):
                 key = f"{attribute}_biome"
         elif object == Variation.TYPE and attribute == Variation.STRUCTURE:
             key = "structure_type"
-        elif object == Variation.CHEST and attribute == Variation.STRUCTURE:
+        elif object == Variation.CHEST and attribute == Variation.STRUCTURE and value not in structure_contents:
             structure_contents.append(value)
         elif object == Variation.BASTION:
             key = f"{attribute}s"
@@ -400,8 +400,8 @@ CREATE TABLE IF NOT EXISTS seeds (
     structure_type TEXT,
     structure_contents TEXT,
     triples INTEGER,
-    doubles INTEGER,
     singles INTEGER,
+    small_singles INTEGER,
     good_gaps INTEGER,
     o_level INTEGER,
     tower TEXT,
