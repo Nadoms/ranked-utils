@@ -360,7 +360,7 @@ class Match(API):
             "seedType": match[10],
             "bastionType": match[11],
             "tag": match[12],
-            "replayExist": match[13],
+            "replayExists": match[13],
         }
 
     @classmethod

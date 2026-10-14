@@ -33,7 +33,7 @@ def query_db(
         seedType
         bastionType
         tag
-        replayExist
+        replayExists
         seed_id
     players keys:
         uuid
@@ -187,7 +187,7 @@ INSERT INTO matches (
     seedType,
     bastionType,
     tag,
-    replayExist,
+    replayExists,
     seed_id
 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
@@ -205,7 +205,7 @@ INSERT INTO matches (
             match.get("seedType"),
             match.get("bastionType"),
             match.get("tag"),
-            match.get("replayExist"),
+            match.get("replayExists"),
             seed_info.get("id") if seed_info else None,
         )
     )
@@ -253,10 +253,17 @@ INSERT INTO runs (
             )
         )
 
-    if not seed_info or not seed_info["id"]:
+    insert_seed(cursor, seed_info)
+
+
+def insert_seed(
+    cursor: sqlite3.Cursor,
+    seed_info: dict[str, any] | None,
+):
+    if not cursor or not seed_info or not seed_info.get("id"):
         return
 
-    variations = parse_variations(seed_info["variations"])
+    variations = parse_variations(seed_info.get("variations"))
     cursor.execute(
         """
 INSERT OR IGNORE INTO seeds (
@@ -283,7 +290,7 @@ INSERT OR IGNORE INTO seeds (
         (
             seed_info.get("id"),
             seed_info.get("overworld"),
-            seed_info.get("bastion"),
+            seed_info.get("nether"),
             variations.get("structure_biome") if seed_info.get("overworld") != "DESERT_TEMPLE" else "desert",
             variations.get("bastion_biome"),
             variations.get("fortress_biome"),
@@ -303,6 +310,52 @@ INSERT OR IGNORE INTO seeds (
     )
 
 
+def update_match_lite(
+    cursor: sqlite3.Cursor,
+    match: dict[str, any],
+):
+    if not cursor:
+        return
+
+    seed_info = match.get("seed")
+    result = match.get("result") or {}
+    values = {
+        "type": match.get("type"),
+        "category": match.get("category"),
+        "gameMode": match.get("gameMode"),
+        "result_uuid": result.get("uuid"),
+        "time": result.get("time"),
+        "forfeited": match.get("forfeited"),
+        "decayed": match.get("decayed"),
+        "season": match.get("season"),
+        "date": match.get("date"),
+        "seedType": match.get("seedType"),
+        "bastionType": match.get("bastionType"),
+        "tag": match.get("tag"),
+        "replayExists": match.get("replayExists"),
+        "seed_id": seed_info.get("id") if seed_info else None,
+    }
+    assignments = ", ".join(f"{col} = COALESCE({col}, :{col})" for col in values)
+
+    cursor.execute(
+        f"UPDATE matches SET {assignments} WHERE id = :id",
+        {"id": match.get("id"), **values},
+    )
+    if cursor.rowcount > 0:
+        insert_seed(cursor, seed_info)
+
+
+def delete_match(
+    cursor: sqlite3.Cursor,
+    match_id: int,
+):
+    if not cursor:
+        return
+
+    cursor.execute("DELETE FROM runs WHERE match_id = ?", (match_id,))
+    cursor.execute("DELETE FROM matches WHERE id = ?", (match_id,))
+
+
 class Variation(StrEnum):
     CHEST = "chest"
     TYPE = "type"
@@ -317,7 +370,7 @@ class Variation(StrEnum):
     END_TOWER = "end_tower"
 
 
-def parse_variations(variations: list[str]):
+def parse_variations(variations: list[str] | None):
     parsed_variations = {}
     if not variations:
         return parsed_variations
@@ -364,7 +417,7 @@ CREATE TABLE IF NOT EXISTS matches (
     seedType TEXT,
     bastionType TEXT,
     tag TEXT,
-    replayExist BOOLEAN,
+    replayExists BOOLEAN,
     seed_id TEXT,
     FOREIGN KEY (seed_id) REFERENCES seeds(id)
 )
@@ -415,6 +468,8 @@ CREATE TABLE IF NOT EXISTS seeds (
     columns = [row[1] for row in cursor.execute("PRAGMA table_info(matches)")]
     if "seed_id" not in columns:
         cursor.execute("ALTER TABLE matches ADD COLUMN seed_id TEXT")
+    if "replayExist" in columns:
+        cursor.execute("ALTER TABLE matches RENAME COLUMN replayExist TO replayExists")
 
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_seed_id ON matches (seed_id)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_match_id ON runs (match_id)")
