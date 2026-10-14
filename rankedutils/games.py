@@ -113,3 +113,10 @@ async def get_detailed_matches(player_response, season, min_comps, limit):
 
     word.process_split(then, "Gathering match details")
     return num_comps, detailed_matches
+
+
+def id_to_season(id):
+    season = 0
+    for season in range(0, constants.SEASON + 1):
+        if constants.FIRST_MATCHES[season] <= id <= constants.FINAL_MATCHES[season]:
+            return season

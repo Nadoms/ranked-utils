@@ -102,7 +102,7 @@ class API():
             except asyncio.TimeoutError:
                 raise APITimeoutError(self.url)
 
-        return self._handle_response(response)
+        return self._handle_response(response, force_request)
 
     def _handle_response(self, response: dict[str, any], force_request: bool = False) -> dict[str, any]:
         if response["status"] == "error":
@@ -259,7 +259,7 @@ class Match(API):
         insert_match(Match._cursor, data)
         Match._additions += 1
 
-    def _check_db(self) -> dict[str, any]:
+    def _check_db(self) -> dict[str, any] | None:
         match = next(query_db(Match._cursor, id=self.id), None)
         if not match:
             return None
@@ -297,6 +297,9 @@ class Match(API):
             )
 
         return self._convert(match, players, runs, seed)
+
+    def exists_db(self) -> bool:
+        return query_db(Match._cursor, id=self.id, items="id").fetchone() is not None
 
     def _convert(
         self,
