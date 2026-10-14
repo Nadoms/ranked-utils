@@ -22,7 +22,6 @@ def query_db(
     matches keys:
         id
         type
-        season
         category
         gameMode
         result_uuid
@@ -170,12 +169,13 @@ def insert_match(
     if not cursor:
         return
 
+    seed_info = match["seed"]
+
     cursor.execute(
         """
 INSERT INTO matches (
     id,
     type,
-    season,
     category,
     gameMode,
     result_uuid,
@@ -189,12 +189,11 @@ INSERT INTO matches (
     tag,
     replayExist,
     seed_id
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             match.get("id"),
             match.get("type"),
-            match.get("season"),
             match.get("category"),
             match.get("gameMode"),
             match["result"].get("uuid"),
@@ -207,7 +206,7 @@ INSERT INTO matches (
             match.get("bastionType"),
             match.get("tag"),
             match.get("replayExist"),
-            match["seed"].get("id"),
+            seed_info.get("id") if seed_info else None,
         )
     )
 
@@ -254,11 +253,13 @@ INSERT INTO runs (
             )
         )
 
-    seed_info = match["seed"]
+    if not seed_info or not seed_info["id"]:
+        return
+
     variations = parse_variations(seed_info["variations"])
     cursor.execute(
         """
-INSERT INTO seeds (
+INSERT OR IGNORE INTO seeds (
     id,
     overworld,
     bastion,
@@ -277,17 +278,27 @@ INSERT INTO seeds (
     front_straight,
     back_diagonal,
     back_straight
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             seed_info.get("id"),
             seed_info.get("overworld"),
             seed_info.get("bastion"),
             variations.get("structure_biome"),
-            seed_info.get("overworld"),
-            seed_info.get("overworld"),
-            seed_info.get("overworld"),
-            seed_info.get("overworld"),
+            variations.get("bastion_biome"),
+            variations.get("fortress_biome"),
+            variations.get("structure_type"),
+            variations.get("structure_contents"),
+            variations.get("triples"),
+            variations.get("doubles"),
+            variations.get("singles"),
+            variations.get("good_gaps"),
+            variations.get("o_level"),
+            variations.get("tower"),
+            seed_info["endTowers"][0] if seed_info["endTowers"] else None,
+            seed_info["endTowers"][1] if seed_info["endTowers"] else None,
+            seed_info["endTowers"][2] if seed_info["endTowers"] else None,
+            seed_info["endTowers"][3] if seed_info["endTowers"] else None,
         )
     )
 
@@ -308,17 +319,20 @@ class Variation(StrEnum):
 
 def parse_variations(variations: list[str]):
     parsed_variations = {}
+    if not variations:
+        return parsed_variations
+
+    structure_contents = []
     for variation in variations:
         object, attribute, value = variation.split(":")
         key = None
-        structure_contents = []
 
         if object == Variation.BIOME:
             if attribute in (Variation.STRUCTURE, Variation.BASTION, Variation.FORTRESS):
                 key = f"{attribute}_biome"
-        elif object == Variation.TYPE and object == Variation.STRUCTURE:
+        elif object == Variation.TYPE and attribute == Variation.STRUCTURE:
             key = "structure_type"
-        elif object == Variation.CHEST and object == Variation.STRUCTURE:
+        elif object == Variation.CHEST and attribute == Variation.STRUCTURE:
             structure_contents.append(value)
         elif object == Variation.BASTION:
             key = f"{attribute}s"
@@ -351,7 +365,7 @@ CREATE TABLE IF NOT EXISTS matches (
     bastionType TEXT,
     tag TEXT,
     replayExist BOOLEAN,
-    seed_id INTEGER,
+    seed_id TEXT,
     FOREIGN KEY (seed_id) REFERENCES seeds(id)
 )
     """)
@@ -377,7 +391,7 @@ CREATE TABLE IF NOT EXISTS runs (
 
     cursor.execute("""
 CREATE TABLE IF NOT EXISTS seeds (
-    id TEXT,
+    id TEXT PRIMARY KEY,
     overworld TEXT,
     bastion TEXT,
     structure_biome TEXT,

@@ -283,15 +283,29 @@ class Match(API):
                 )
             )
 
-        return self._convert(match, players, runs)
+        if not match[14]:
+            seed = None
+        else:
+            seed = next(
+                query_db(
+                    Match._cursor,
+                    table="seeds",
+                    id=match[14],
+                    items="id"
+                ),
+                None
+            )
+
+        return self._convert(match, players, runs, seed)
 
     def _convert(
         self,
         match: list[any],
         players: list[any],
         runs: list[any],
+        seed: list[any] | None,
     ) -> dict[str, any]:
-        players = [
+        players_json = [
             {
                 "uuid": player[0],
                 "nickname": player[1],
@@ -299,7 +313,7 @@ class Match(API):
             for player in players
         ]
 
-        changes = [
+        changes_json = [
             {
                 "uuid": run[1],
                 "change": run[2],
@@ -308,9 +322,9 @@ class Match(API):
             for run in runs
         ]
 
-        timelines = []
+        timelines_json = []
         for run in runs:
-            timelines += [
+            timelines_json += [
             {
                 "uuid": run[1],
                 "time": event["time"],
@@ -318,22 +332,29 @@ class Match(API):
             }
             for event in json.loads(run[4])
         ]
-        timelines.sort(key=lambda x: x["time"], reverse=True)
+        timelines_json.sort(key=lambda x: x["time"], reverse=True)
+
+        seed_json = {
+            "id": seed[0] if seed else None,
+            "overworld": match[10],
+            "nether": match[11],
+        }
 
         return {
             "id": match[0],
             "type": match[1],
+            "seed": seed_json,
             "category": match[2],
             "gameMode": match[3],
-            "players": players,
+            "players": players_json,
             "result": {
                 "uuid": match[4],
                 "time": match[5],
             },
             "forfeited": bool(match[6]),
             "decayed": bool(match[7]),
-            "changes": changes,
-            "timelines": timelines,
+            "changes": changes_json,
+            "timelines": timelines_json,
             "season": match[8],
             "date": match[9],
             "seedType": match[10],
