@@ -411,6 +411,11 @@ CREATE TABLE IF NOT EXISTS seeds (
     back_straight INTEGER
 )
     """)
+
+    columns = [row[1] for row in cursor.execute("PRAGMA table_info(matches)")]
+    if "seed_id" not in columns:
+        cursor.execute("ALTER TABLE matches ADD COLUMN seed_id TEXT")
+
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_seed_id ON matches (seed_id)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_match_id ON runs (match_id)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_player_uuid ON runs (player_uuid)")
