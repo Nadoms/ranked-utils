@@ -283,14 +283,14 @@ class Match(API):
                 )
             )
 
-        if not match[14]:
+        if not match[13]:
             seed = None
         else:
             seed = next(
                 query_db(
                     Match._cursor,
                     table="seeds",
-                    id=match[14],
+                    id=match[13],
                     items="id"
                 ),
                 None
@@ -363,7 +363,6 @@ class Match(API):
             "seedType": match[10],
             "bastionType": match[11],
             "tag": match[12],
-            "replayExists": match[13],
         }
 
     @classmethod

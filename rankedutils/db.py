@@ -33,7 +33,6 @@ def query_db(
         seedType
         bastionType
         tag
-        replayExists
         seed_id
     players keys:
         uuid
@@ -187,7 +186,6 @@ INSERT INTO matches (
     seedType,
     bastionType,
     tag,
-    replayExists,
     seed_id
 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
@@ -205,7 +203,6 @@ INSERT INTO matches (
             match.get("seedType"),
             match.get("bastionType"),
             match.get("tag"),
-            match.get("replayExists"),
             seed_info.get("id") if seed_info else None,
         )
     )
@@ -332,7 +329,6 @@ def update_match_lite(
         "seedType": match.get("seedType"),
         "bastionType": match.get("bastionType"),
         "tag": match.get("tag"),
-        "replayExists": match.get("replayExists"),
         "seed_id": seed_info.get("id") if seed_info else None,
     }
     assignments = ", ".join(f"{col} = COALESCE({col}, :{col})" for col in values)
@@ -417,7 +413,6 @@ CREATE TABLE IF NOT EXISTS matches (
     seedType TEXT,
     bastionType TEXT,
     tag TEXT,
-    replayExists BOOLEAN,
     seed_id TEXT,
     FOREIGN KEY (seed_id) REFERENCES seeds(id)
 )
@@ -469,7 +464,9 @@ CREATE TABLE IF NOT EXISTS seeds (
     if "seed_id" not in columns:
         cursor.execute("ALTER TABLE matches ADD COLUMN seed_id TEXT")
     if "replayExist" in columns:
-        cursor.execute("ALTER TABLE matches RENAME COLUMN replayExist TO replayExists")
+        cursor.execute("ALTER TABLE matches DROP COLUMN replayExist")
+    if "replayExists" in columns:
+        cursor.execute("ALTER TABLE matches DROP COLUMN replayExists")
 
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_seed_id ON matches (seed_id)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_match_id ON runs (match_id)")
