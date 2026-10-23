@@ -286,13 +286,8 @@ INSERT OR IGNORE INTO seeds (
     front_diagonal,
     front_straight,
     back_diagonal,
-    back_straight,
-    past_score,
-    past_count,
-    current_score,
-    current_count,
-    seasons
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    back_straight
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             seed_info.get("id"),
@@ -498,9 +493,9 @@ CREATE TABLE IF NOT EXISTS seeds (
 )
     """)
 
-    columns = [row[1] for row in cursor.execute("PRAGMA table_info(matches)")]
+    match_columns = [row[1] for row in cursor.execute("PRAGMA table_info(matches)")]
+    seed_columns = [row[1] for row in cursor.execute("PRAGMA table_info(seeds)")]
     new_columns = {
-        "seed_id": "TEXT",
         "past_score": "FLOAT",
         "past_count": "INTEGER",
         "current_score": "FLOAT",
@@ -508,12 +503,13 @@ CREATE TABLE IF NOT EXISTS seeds (
         "seasons": "TEXT",
     }
     for new_column in new_columns:
-        if new_column not in columns:
-            cursor.execute(f"ALTER TABLE matches ADD COLUMN {new_column} {new_columns[new_column]}")
-    if "replayExist" in columns:
-        cursor.execute("ALTER TABLE matches DROP COLUMN replayExist")
-    if "replayExists" in columns:
-        cursor.execute("ALTER TABLE matches DROP COLUMN replayExists")
+        if new_column not in seed_columns:
+            cursor.execute(f"ALTER TABLE seeds ADD COLUMN {new_column} {new_columns[new_column]}")
+    if "seed_id" not in match_columns:
+        cursor.execute("ALTER TABLE matches ADD COLUMN seed_id TEXT")
+    for replay_header in ("replayExist", "replayExists"):
+        if replay_header in match_columns:
+            cursor.execute(f"ALTER TABLE matches DROP COLUMN {replay_header}")
 
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_seed_id ON matches (seed_id)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_match_id ON runs (match_id)")
