@@ -62,6 +62,11 @@ def query_db(
         front_straight
         back_diagonal
         back_straight
+        past_score
+        past_count
+        current_score
+        current_count
+        seasons
     """
     conditions = [where] if where else []
 
@@ -281,8 +286,13 @@ INSERT OR IGNORE INTO seeds (
     front_diagonal,
     front_straight,
     back_diagonal,
-    back_straight
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    back_straight,
+    past_score,
+    past_count,
+    current_score,
+    current_count,
+    seasons
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             seed_info.get("id"),
@@ -339,6 +349,29 @@ def update_match_lite(
     )
     if cursor.rowcount > 0:
         insert_seed(cursor, seed_info)
+
+
+def update_seed(
+    cursor: sqlite3.Cursor,
+    seed_id: str,
+    values: dict[str, any],
+    overwrite: bool = False,
+):
+    if not cursor or not seed_id or not values:
+        return
+
+    columns = [row[1] for row in cursor.execute("PRAGMA table_info(seeds)")]
+    values = {col: val for col, val in values.items() if col in columns and col != "id"}
+    assignments = ", ".join(
+        f"{col} = :{col}" if overwrite
+        else f"{col} = COALESCE({col}, :{col})"
+        for col in values
+    )
+
+    cursor.execute(
+        f"UPDATE seeds SET {assignments} WHERE id = :id",
+        {"id": seed_id, **values},
+    )
 
 
 def delete_match(
@@ -456,13 +489,19 @@ CREATE TABLE IF NOT EXISTS seeds (
     front_diagonal INTEGER,
     front_straight INTEGER,
     back_diagonal INTEGER,
-    back_straight INTEGER
+    back_straight INTEGER,
+    past_score FLOAT,
+    past_count INTEGER,
+    current_score FLOAT,
+    current_count INTEGER,
+    seasons TEXT
 )
     """)
 
     columns = [row[1] for row in cursor.execute("PRAGMA table_info(matches)")]
-    if "seed_id" not in columns:
-        cursor.execute("ALTER TABLE matches ADD COLUMN seed_id TEXT")
+    for new_column in ("seed_id", "past_score", "past_count", "current_score", "current_count", "seasons"):
+        if new_column not in columns:
+            cursor.execute(f"ALTER TABLE matches ADD COLUMN {new_column} TEXT")
     if "replayExist" in columns:
         cursor.execute("ALTER TABLE matches DROP COLUMN replayExist")
     if "replayExists" in columns:

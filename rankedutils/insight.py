@@ -1,3 +1,5 @@
+import numpy as np
+
 from . import constants
 
 
@@ -62,7 +64,6 @@ def get_avg_opponent_elo(uuid: str, matches: list) -> int | None:
             if elo:
                 opponent_elos.append(elo)
     return round(sum(opponent_elos) / len(opponent_elos)) if opponent_elos else None
-
 
 def get_choke_rate(uuid: str, detailed_matches: list):
     chokes = 0
@@ -205,3 +206,23 @@ def fast_misc_stats(uuid: str, detailed_matches: list) -> tuple[float, float, fl
         momentum = calc_momentum(mom_info["win"]["win"], mom_info["loss"]["loss"], mom_count, winrate)
 
     return choke_rate, resilience, momentum
+
+
+def score_run(uuid: str, matches: list[dict], time: int) -> float:
+    history = [get_match_completion(uuid, match) for match in matches if get_match_completion(uuid, match) is not None]
+    if time in history:
+        history.remove(time)
+    return 1 - round(np.searchsorted(history, time) / len(history), 3)
+
+
+def score_seed(run_scores: list[float]) -> float:
+    return round(np.mean(run_scores), 3)
+
+
+def get_seed_score(
+    past_score: float,
+    past_count: int,
+    current_score: float,
+    current_count: int,
+):
+    return (past_score * past_count + current_score * current_count) / (past_count + current_count)
