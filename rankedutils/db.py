@@ -499,9 +499,17 @@ CREATE TABLE IF NOT EXISTS seeds (
     """)
 
     columns = [row[1] for row in cursor.execute("PRAGMA table_info(matches)")]
-    for new_column in ("seed_id", "past_score", "past_count", "current_score", "current_count", "seasons"):
+    new_columns = {
+        "seed_id": "TEXT",
+        "past_score": "FLOAT",
+        "past_count": "INTEGER",
+        "current_score": "FLOAT",
+        "current_count": "INTEGER",
+        "seasons": "TEXT",
+    }
+    for new_column in new_columns:
         if new_column not in columns:
-            cursor.execute(f"ALTER TABLE matches ADD COLUMN {new_column} TEXT")
+            cursor.execute(f"ALTER TABLE matches ADD COLUMN {new_column} {new_columns[new_column]}")
     if "replayExist" in columns:
         cursor.execute("ALTER TABLE matches DROP COLUMN replayExist")
     if "replayExists" in columns:
