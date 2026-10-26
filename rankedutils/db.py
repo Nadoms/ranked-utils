@@ -336,7 +336,7 @@ def hash_seed_id(seed_id: str, salt: int = 0) -> str:
 def assign_word_id(cursor: sqlite3.Cursor, seed_id: str) -> str:
     salt = 0
     word_id = hash_seed_id(seed_id, salt)
-    while word_id and cursor.execute("SELECT 1 FROM seeds WHERE word_id = ?", (word_id,)).fetchone():
+    while cursor.execute("SELECT 1 FROM seeds WHERE word_id = ?", (word_id,)).fetchone():
         salt += 1
         word_id = hash_seed_id(seed_id, salt)
     return word_id
@@ -346,13 +346,14 @@ def name_seeds(cursor: sqlite3.Cursor) -> int:
     seed_info = query_db(
         cursor,
         table="seeds",
+        items="id",
         where="word_id IS NULL",
         order="id"
-    )
-    for seed in seed_info:
+    ).fetchall()
+    for (seed_id,) in seed_info:
         cursor.execute(
             "UPDATE seeds SET word_id = ? WHERE id = ?",
-            (assign_word_id(cursor, seed[0]), seed[0]),
+            (assign_word_id(cursor, seed_id), seed_id),
         )
     return len(seed_info)
 
@@ -558,15 +559,15 @@ CREATE TABLE IF NOT EXISTS seeds (
         if replay_header in match_columns:
             cursor.execute(f"ALTER TABLE matches DROP COLUMN {replay_header}")
 
-    new_word_ids = name_seeds()
-    if new_word_ids:
-        print(f"Named {new_word_ids} new seeds")
-
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_seed_id ON matches (seed_id)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_match_id ON runs (match_id)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_player_uuid ON runs (player_uuid)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_matches_season_type_decayed ON matches (season, type, decayed)")
     cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_word_id ON seeds (word_id)")
+
+    new_word_ids = name_seeds(cursor)
+    if new_word_ids:
+        print(f"Named {new_word_ids} new seeds")
 
 
 def start(db_path: Path | None = None) -> tuple[sqlite3.Connection, sqlite3.Cursor]:
