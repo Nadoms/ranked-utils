@@ -1,10 +1,17 @@
 from enum import StrEnum
+import hashlib
 import json
 from os import getenv
 from pathlib import Path
 import sqlite3
 
+from wonderwords import RandomWord
+
 from . import constants
+
+words = RandomWord()
+ADJECTIVES = sorted(w.lower() for w in words.filter(include_parts_of_speech=["adjectives"]) if w.isalpha())
+NOUNS = sorted(w.lower() for w in words.filter(include_parts_of_speech=["nouns"]) if w.isalpha())
 
 
 def query_db(
@@ -67,6 +74,7 @@ def query_db(
         current_score
         current_count
         seasons
+        word_id
     """
     conditions = [where] if where else []
 
@@ -265,10 +273,13 @@ def insert_seed(
     if not cursor or not seed_info or not seed_info.get("id"):
         return
 
+    if cursor.execute("SELECT 1 FROM seeds WHERE id = ?", (seed_info["id"],)).fetchone():
+        return
+
     variations = parse_variations(seed_info.get("variations"))
     cursor.execute(
         """
-INSERT OR IGNORE INTO seeds (
+INSERT INTO seeds (
     id,
     overworld,
     bastion,
@@ -286,8 +297,9 @@ INSERT OR IGNORE INTO seeds (
     front_diagonal,
     front_straight,
     back_diagonal,
-    back_straight
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    back_straight,
+    word_id
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """,
         (
             seed_info.get("id"),
@@ -308,8 +320,41 @@ INSERT OR IGNORE INTO seeds (
             seed_info["endTowers"][1] if seed_info["endTowers"] else None,
             seed_info["endTowers"][2] if seed_info["endTowers"] else None,
             seed_info["endTowers"][3] if seed_info["endTowers"] else None,
+            assign_word_id(cursor, seed_info["id"]),
         )
     )
+
+
+def hash_seed_id(seed_id: str, salt: int = 0) -> str:
+    digest = hashlib.sha256(f"{seed_id}:{salt}".encode()).digest()
+    n = int.from_bytes(digest[:8], "big")
+    adjective = ADJECTIVES[n % len(ADJECTIVES)]
+    noun = NOUNS[(n // len(ADJECTIVES)) % len(NOUNS)]
+    return f"{adjective}-{noun}"
+
+
+def assign_word_id(cursor: sqlite3.Cursor, seed_id: str) -> str:
+    salt = 0
+    word_id = hash_seed_id(seed_id, salt)
+    while word_id and cursor.execute("SELECT 1 FROM seeds WHERE word_id = ?", (word_id,)).fetchone():
+        salt += 1
+        word_id = hash_seed_id(seed_id, salt)
+    return word_id
+
+
+def name_seeds(cursor: sqlite3.Cursor) -> int:
+    seed_info = query_db(
+        cursor,
+        table="seeds",
+        where="word_id IS NULL",
+        order="id"
+    )
+    for seed in seed_info:
+        cursor.execute(
+            "UPDATE seeds SET word_id = ? WHERE id = ?",
+            (assign_word_id(cursor, seed[0]), seed[0]),
+        )
+    return len(seed_info)
 
 
 def update_match_lite(
@@ -489,7 +534,8 @@ CREATE TABLE IF NOT EXISTS seeds (
     past_count INTEGER,
     current_score FLOAT,
     current_count INTEGER,
-    seasons TEXT
+    seasons TEXT,
+    word_id TEXT
 )
     """)
 
@@ -501,6 +547,7 @@ CREATE TABLE IF NOT EXISTS seeds (
         "current_score": "FLOAT",
         "current_count": "INTEGER",
         "seasons": "TEXT",
+        "word_id": "TEXT",
     }
     for new_column in new_columns:
         if new_column not in seed_columns:
@@ -511,10 +558,15 @@ CREATE TABLE IF NOT EXISTS seeds (
         if replay_header in match_columns:
             cursor.execute(f"ALTER TABLE matches DROP COLUMN {replay_header}")
 
+    new_word_ids = name_seeds()
+    if new_word_ids:
+        print(f"Named {new_word_ids} new seeds")
+
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_seed_id ON matches (seed_id)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_match_id ON runs (match_id)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_player_uuid ON runs (player_uuid)")
     cursor.execute("CREATE INDEX IF NOT EXISTS idx_matches_season_type_decayed ON matches (season, type, decayed)")
+    cursor.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_word_id ON seeds (word_id)")
 
 
 def start(db_path: Path | None = None) -> tuple[sqlite3.Connection, sqlite3.Cursor]:

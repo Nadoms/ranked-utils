@@ -11,6 +11,7 @@ dependencies = [
     "aiohttp",
     "numpy>=2.5.4",
     "requests",
+    "wonderwords==3.0.1",
 ]
 
 [tool.setuptools.packages]
