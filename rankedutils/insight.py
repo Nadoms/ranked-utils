@@ -65,6 +65,7 @@ def get_avg_opponent_elo(uuid: str, matches: list) -> int | None:
                 opponent_elos.append(elo)
     return round(sum(opponent_elos) / len(opponent_elos)) if opponent_elos else None
 
+
 def get_choke_rate(uuid: str, detailed_matches: list):
     chokes = 0
     match_count = 0
@@ -220,9 +221,16 @@ def score_seed(run_scores: list[float]) -> float:
 
 
 def get_seed_score(
-    past_score: float,
-    past_count: int,
-    current_score: float,
-    current_count: int,
-):
-    return (past_score * past_count + current_score * current_count) / (past_count + current_count)
+    past_score: float | None,
+    past_count: int | None,
+    current_score: float | None,
+    current_count: int | None,
+    sample_size: int = 3,
+) -> float | None:
+    if past_score is None or past_count is None:
+        if current_score is None or current_count is None:
+            return None
+        return current_score
+    if past_count + past_score < sample_size:
+        return None
+    return round((past_score * past_count + current_score * current_count) / (past_count + current_count), 3)
