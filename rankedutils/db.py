@@ -50,6 +50,7 @@ def query_db(
         change
         eloRate
         timeline
+        score
     seeds keys:
         id
         overworld
@@ -415,6 +416,30 @@ def update_seed(
     )
 
 
+def update_run(
+    cursor: sqlite3.Cursor,
+    match_id: int,
+    player_uuid: str,
+    values: dict[str, any],
+    overwrite: bool = False,
+):
+    if not cursor or not match_id or not player_uuid or not values:
+        return
+
+    columns = [row[1] for row in cursor.execute("PRAGMA table_info(runs)")]
+    values = {col: val for col, val in values.items() if col in columns and col not in ("match_id", "player_uuid")}
+    assignments = ", ".join(
+        f"{col} = :{col}" if overwrite
+        else f"{col} = COALESCE({col}, :{col})"
+        for col in values
+    )
+
+    cursor.execute(
+        f"UPDATE runs SET {assignments} WHERE match_id = :match_id AND player_uuid = :player_uuid",
+        {**values, "match_id": match_id, "player_uuid": player_uuid},
+    )
+
+
 def delete_match(
     cursor: sqlite3.Cursor,
     match_id: int,
@@ -506,6 +531,7 @@ CREATE TABLE IF NOT EXISTS runs (
     change INTEGER,
     eloRate INTEGER,
     timeline TEXT,
+    score FLOAT,
     FOREIGN KEY (match_id) REFERENCES matches(id),
     FOREIGN KEY (player_uuid) REFERENCES players(uuid)
 )
@@ -541,6 +567,7 @@ CREATE TABLE IF NOT EXISTS seeds (
     """)
 
     match_columns = [row[1] for row in cursor.execute("PRAGMA table_info(matches)")]
+    run_columns = [row[1] for row in cursor.execute("PRAGMA table_info(runs)")]
     seed_columns = [row[1] for row in cursor.execute("PRAGMA table_info(seeds)")]
     new_columns = {
         "past_score": "FLOAT",
@@ -555,6 +582,8 @@ CREATE TABLE IF NOT EXISTS seeds (
             cursor.execute(f"ALTER TABLE seeds ADD COLUMN {new_column} {new_columns[new_column]}")
     if "seed_id" not in match_columns:
         cursor.execute("ALTER TABLE matches ADD COLUMN seed_id TEXT")
+    if "score" not in run_columns:
+        cursor.execute("ALTER TABLE runs ADD COLUMN score FLOAT")
     for replay_header in ("replayExist", "replayExists"):
         if replay_header in match_columns:
             cursor.execute(f"ALTER TABLE matches DROP COLUMN {replay_header}")
