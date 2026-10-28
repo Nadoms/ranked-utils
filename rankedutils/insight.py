@@ -231,6 +231,6 @@ def get_seed_score(
         if current_score is None or current_count is None:
             return None
         return current_score
-    if past_count + past_score < sample_size:
+    if past_count + current_count < sample_size:
         return None
     return round((past_score * past_count + current_score * current_count) / (past_count + current_count), 3)
