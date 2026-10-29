@@ -14,13 +14,13 @@ ADJECTIVES = sorted(
     w.lower()
     for w
     in words.filter(include_parts_of_speech=["adjectives"])
-    if w.isalpha() and len(w) <= 7
+    if w.isalpha() and len(w) <= 8
 )
 NOUNS = sorted(
     w.lower()
     for w
     in words.filter(include_parts_of_speech=["nouns"])
-    if w.isalpha() and len(w) <= 7
+    if w.isalpha() and len(w) <= 8
 )
 
 
