@@ -10,8 +10,18 @@ from wonderwords import RandomWord
 from . import constants
 
 words = RandomWord()
-ADJECTIVES = sorted(w.lower() for w in words.filter(include_parts_of_speech=["adjectives"]) if w.isalpha())
-NOUNS = sorted(w.lower() for w in words.filter(include_parts_of_speech=["nouns"]) if w.isalpha())
+ADJECTIVES = sorted(
+    w.lower()
+    for w
+    in words.filter(include_parts_of_speech=["adjectives"])
+    if w.isalpha() and len(w) <= 7
+)
+NOUNS = sorted(
+    w.lower()
+    for w
+    in words.filter(include_parts_of_speech=["nouns"])
+    if w.isalpha() and len(w) <= 7
+)
 
 
 def query_db(
