@@ -189,6 +189,23 @@ def get_nick(
         return nick[0]
 
 
+def get_seed(
+    cursor: sqlite3.Cursor,
+    match_id: int,
+) -> tuple[str | None, str | None]:
+    seed_ids = next(
+        query_db(
+            cursor,
+            "seeds s",
+            join="matches m ON s.id == m.seed_id",
+            items="s.id, s.word_id",
+            where=f"m.id == {match_id}",
+        ),
+        (None, None)
+    )
+    return seed_ids
+
+
 def insert_match(
     cursor: sqlite3.Cursor,
     match: dict[str, any],
