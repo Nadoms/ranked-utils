@@ -1,9 +1,11 @@
+from contextlib import contextmanager
 from enum import StrEnum
 import hashlib
 import json
 from os import getenv
 from pathlib import Path
 import sqlite3
+from typing import Generator
 
 from wonderwords import RandomWord
 
@@ -643,6 +645,15 @@ def start(db_path: Path | None = None) -> tuple[sqlite3.Connection, sqlite3.Curs
 def finish(conn: sqlite3.Connection):
     conn.commit()
     conn.close()
+
+
+@contextmanager
+def connect(db_path: Path | None = None) -> Generator[sqlite3.Cursor, None, None]:
+    conn, cursor = start(db_path)
+    try:
+        yield cursor
+    finally:
+        finish(conn)
 
 
 def main():
